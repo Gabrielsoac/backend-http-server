@@ -1,0 +1,22 @@
+{
+  "name": "backend-http-server",
+  "version": "1.0.0",
+  "description": "Backend Http Server with Pure NodeJs (Only Native Modules)",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gabrielsoac/backend-http-server.git"
+  },
+  "keywords": [
+    "server-http"
+  ],
+  "author": "Gabriel Soares",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Gabrielsoac/backend-http-server/issues"
+  },
+  "homepage": "https://github.com/Gabrielsoac/backend-http-server#readme"
+}
