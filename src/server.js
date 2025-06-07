@@ -13,17 +13,16 @@ const startServer = async () => {
     }
 
     http.createServer(
-    async (request, response) => {
-        if(request.url === '/hello-world' && request.method === 'GET'){
-            response.writeHead(200, {"content-type": 'application/json'});
-            response.end(JSON.stringify({'message':'Hello World'}));
-            return;
+        async (request, response) => {
+            if(request.url === '/hello-world' && request.method === 'GET'){
+                response.writeHead(200, {"content-type": 'application/json'});
+                response.end(JSON.stringify({'message':'Hello World'}));
+                return;
+            }
+
+            response.writeHead(404, {"content-type": "application/json"});
+            response.end(JSON.stringify({"error": "Not Found"}));
         }
-
-        response.writeHead(404, {"content-type": "application/json"});
-        response.end(JSON.stringify({"error": "Not Found"}));
-
-    }
     ).listen(8080, () => {
         console.log('🚀 Server run on http://localhost:8080')
     });
