@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/Gabrielsoac/backend-http-server/issues"
   },
-  "homepage": "https://github.com/Gabrielsoac/backend-http-server#readme"
+  "homepage": "https://github.com/Gabrielsoac/backend-http-server#readme",
+  "dependencies": {
+    "mongodb": "^6.17.0"
+  }
 }
