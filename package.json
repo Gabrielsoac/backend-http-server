@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "Backend Http Server with Pure NodeJs (Only Native Modules)",
   "main": "server.js",
+  "type": "module",
   "scripts": {
+    "dev": "node ./src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
