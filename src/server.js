@@ -1,6 +1,6 @@
 import http from 'http';
 import { dbConnection } from './database/dbConnection.js';
-import { createNews, findNews } from './services/newsService.js';
+import { createNews, findAllNews, findNewsById } from './services/newsService.js';
 
 let db = null;
 
@@ -32,12 +32,21 @@ const startServer = async () => {
                 request.on('end', async () => {
                     const bodyData = JSON.parse(body);
                     const persistedData = await createNews(articlesCollection, bodyData);
-                    const news = await findNews(articlesCollection, persistedData.insertedId);
-                    response.writeHead(201, ({"content-type": 'application/json'}));
+                    const news = await findNewsById(articlesCollection, persistedData.insertedId);
+                    response.writeHead(201, { 'content-type': 'application/json' });
                     response.end(JSON.stringify(news));
                 });
                 return;
             }
+
+            if(request.url= "/" && request.method === 'GET'){
+                const articlesCollection = await db.collection('articles');
+                const allNews = await findAllNews(articlesCollection);
+                response.writeHead(200, { 'content-type': 'application/json' })
+                response.end(JSON.stringify(allNews));
+                return;
+            }
+            
             response.writeHead(404, {"content-type": "application/json"});
             response.end(JSON.stringify({"error": "Not Found"}));
         }
