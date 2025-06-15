@@ -1,6 +1,6 @@
 import http from 'http';
 import { dbConnection } from './database/dbConnection.js';
-import { createNews, findAllNews, findNewsById } from './services/newsService.js';
+import { createNews, findAllNews, findNewsById, updateNewsById } from './services/newsService.js';
 
 let db = null;
 
@@ -39,7 +39,7 @@ const startServer = async () => {
                 return;
             }
 
-            if(request.url= "/" && request.method === 'GET'){
+            if(request.url === "/" && request.method === 'GET'){
                 const articlesCollection = await db.collection('articles');
                 const allNews = await findAllNews(articlesCollection);
                 response.writeHead(200, { 'content-type': 'application/json' })
@@ -47,6 +47,39 @@ const startServer = async () => {
                 return;
             }
 
+            if(request.url.length === 25 && request.method === 'PUT'){
+                
+                const parsedUrl = new URL(request.url, `http://${request.headers.host}`);
+                const path = parsedUrl.pathname;
+                const match = path.match(/^\/([a-f\d]{24})$/i);
+                const id = match[1];
+                let body = [];
+
+                request.on('data', (chunk) => {
+                    body.push(chunk);
+                });
+
+                request.on('end', async () => {
+                    const bodyRaw = Buffer.concat(body).toString();
+                    let bodyJson = null;
+                    try {
+                        bodyJson = JSON.parse(bodyRaw);
+                    }catch(err){
+                        throw new Error('Invalid news update data');
+                    }
+                    const articlesCollection = await db.collection('articles');
+                    const updatedNews = await updateNewsById(articlesCollection, id, bodyJson);
+                    
+                    if(updatedNews === null) {
+                        response.writeHead(404);
+                        response.end('News not found');
+                        return;
+                    }
+                    response.writeHead(200, {"content-type": 'application/json'});
+                    response.end(JSON.stringify(updatedNews));
+                }); 
+                return;
+            }
             response.writeHead(404, {"content-type": "application/json"});
             response.end(JSON.stringify({"error": "Not Found"}));
         }
