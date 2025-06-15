@@ -23,7 +23,7 @@ const startServer = async () => {
                 return;
             }
 
-            if(request.method === 'POST') {
+            if(request.url === '/' && request.method === 'POST') {
                 let body = '';
                 request.on('data', (chunk) => {
                     body += chunk;
@@ -46,7 +46,7 @@ const startServer = async () => {
                 response.end(JSON.stringify(allNews));
                 return;
             }
-            
+
             response.writeHead(404, {"content-type": "application/json"});
             response.end(JSON.stringify({"error": "Not Found"}));
         }

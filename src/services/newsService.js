@@ -12,5 +12,5 @@ export async function findNewsById(collection, id) {
 
 export async function findAllNews(collection){
     const allNews = await collection.find().toArray();
-    return allNews; 
+    return allNews;
 }
