@@ -1,7 +1,7 @@
 import http from 'http';
 import { dbConnection } from './database/dbConnection.js';
 import { createNews, deleteNewsById, findAllNews, findNewsById, updateNewsById } from './services/newsService.js';
-import { getIdParam } from './services/webHelper.js/index.js';
+import { getIdParam } from './services/webHelper.js';
 
 let db = null;
 

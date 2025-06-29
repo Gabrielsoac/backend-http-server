@@ -6,7 +6,7 @@ services:
             - .:/app
             - /app/node_modules
         ports: 
-            - "8080:3000"
+            - "3000:8080"
         command: sh -c "npm install && npm run dev"
         depends_on:
             - db
@@ -15,6 +15,3 @@ services:
         image: mongo:8.0
         ports: 
             - "27017:27017"
-
-         
-        
