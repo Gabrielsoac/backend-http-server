@@ -1,6 +1,7 @@
 import http from 'http';
 import { dbConnection } from './database/dbConnection.js';
 import { createNews, deleteNewsById, findAllNews, findNewsById, updateNewsById } from './services/newsService.js';
+import { getIdParam } from './services/webHelper';
 
 let db = null;
 
@@ -25,26 +26,28 @@ const startServer = async () => {
 
             if(request.url === '/' && request.method === 'POST') {
                 let body = '';
-                request.on('data', (chunk) => {
-                    body += chunk;
-                });
+                request.on(
+                    'data',
+                    (chunk) => { body += chunk });
 
-                request.on('end', async () => {
-                    try {
-                        const bodyData = JSON.parse(body);
-                        const persistedData = await createNews(articlesCollection, bodyData);
-                        const news = await findNewsById(articlesCollection, persistedData.insertedId);
-                        response.writeHead(201, { 'content-type': 'application/json' });
-                        response.end(JSON.stringify(news));
-                        return;
-                }
-                catch(error){
-                    response.writeHead(500, { 'content-type': 'application/json' });
-                    response.end(JSON.stringify({status: 500, message: error.message}));
-                    return;
-                }
-            });
-                    
+                request.on(
+                    'end',
+                    async () => {
+                        try {
+                            const bodyData = JSON.parse(body);
+                            const persistedData = await createNews(articlesCollection, bodyData);
+                            const news = await findNewsById(articlesCollection, persistedData.insertedId);
+                            response.writeHead(201, { 'content-type': 'application/json' });
+                            response.end(JSON.stringify(news));
+                            return;
+                        }
+                        catch(error){
+                            response.writeHead(500, { 'content-type': 'application/json' });
+                            response.end(JSON.stringify({status: 500, message: error.message}));
+                            return;
+                        }
+                    }
+                );
             }
 
             if(request.url === "/" && request.method === 'GET'){
@@ -58,10 +61,7 @@ const startServer = async () => {
             if(request.method === 'GET' && request.url.length === 25){
                 try {
                     const articlesCollection = await db.collection('articles');
-                    const parsedUrl = new URL(request.url, `http://${request.headers.host}`);
-                    const path = parsedUrl.pathname;
-                    const match = path.match(/^\/([a-f\d]{24})$/i);
-                    const id = match[1];
+                    const id = getIdParam(request.url, request.headers.host); 
                     const article = await findNewsById(articlesCollection, id);
 
                     if(article){
@@ -77,45 +77,35 @@ const startServer = async () => {
             }
 
             if(request.method === 'PUT'){
-                const parsedUrl = new URL(request.url, `http://${request.headers.host}`);
-                const path = parsedUrl.pathname;
-                const match = path.match(/^\/([a-f\d]{24})$/i);
-                const id = match[1];
+                const articlesCollection = await db.collection('articles');
+                const id = getIdParam(request.url, request.headers.host); 
                 let body = [];
 
-                request.on('data', (chunk) => {
-                    body.push(chunk);
-                });
-
-                request.on('end', async () => {
-                    const bodyRaw = Buffer.concat(body).toString();
-                    let bodyJson = null;
-                    try {
-                        bodyJson = JSON.parse(bodyRaw);
-                    }catch(err){
-                        throw new Error('Invalid news update data');
+                request.on('data', (chunk) => { body.push(chunk) });
+                request.on(
+                    'end',
+                    async () => {
+                        const bodyRaw = Buffer.concat(body).toString();
+                        let bodyJson = null;
+                        try {
+                            bodyJson = JSON.parse(bodyRaw);
+                        }catch(err){
+                            throw new Error('Invalid news update data');
+                        }
+                        const updatedNews = await updateNewsById(articlesCollection, id, bodyJson);
+                        if(updatedNews) {
+                            response.writeHead(200, {"content-type": 'application/json'});
+                            response.end(JSON.stringify(updatedNews));
+                            return;
+                        }
                     }
-                    const articlesCollection = await db.collection('articles');
-                    const updatedNews = await updateNewsById(articlesCollection, id, bodyJson);
-                    
-                    if(updatedNews) {
-                        response.writeHead(200, {"content-type": 'application/json'});
-                        response.end(JSON.stringify(updatedNews));
-                        return;
-                    }
-                });
+                );
             }
 
             if (request.method === 'DELETE' && request.url.length === 25){
-                
                 try {
                     const articlesCollection = await db.collection('articles');
-                    
-                    const parsedUrl = new URL(request.url, `http://${request.headers.host}`);
-                    const path = parsedUrl.pathname;
-                    const match = path.match(/^\/([a-f\d]{24})$/i);
-                    const id = match[1];
-
+                    const id = getIdParam(request.url, request.headers.host); 
                     const news = await findNewsById(articlesCollection, id);
                     if(news) {
                         await deleteNewsById(articlesCollection, id);
