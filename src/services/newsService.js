@@ -1,28 +1,45 @@
 import { ObjectId } from "mongodb";
 
 export async function createNews(collection, newsData) {
-    return await collection.insertOne(newsData);
+    try {
+        return await collection.insertOne(newsData);
+    } catch (err) {
+        throw new Error(err.message);
+    }
 }
 
 export async function findNewsById(collection, id) {
-    return await collection.findOne({ _id: new ObjectId(id) });
+    try {
+        return await collection.findOne({ _id: new ObjectId(String(id)) });
+    } catch (err){
+        throw new Error(err.message);
+    }
 }
 
 export async function findAllNews(collection){
-    return await collection.find().toArray();
+    try {
+        return await collection.find().toArray();
+    } catch (err){
+        throw Error(err.message);
+    }
 }
 
 export async function updateNewsById(collection, id, data){
-    return await collection.findOneAndUpdate(
-        {_id: new ObjectId(id)},
-        { $set: { title: data.title, description: data.description } },
-        { returnDocument: 'after' }
-    );
+    try {
+        return await collection.findOneAndUpdate(
+            {_id: new ObjectId(String(id))},
+            { $set: { title: data.title, description: data.description } },
+            { returnDocument: 'after' }
+        );
+    } catch(err){
+        throw new Error(err.message);
+    }
+
 }
 
 export async function deleteNewsById(collection, id){
     try {
-        await collection.deleteOne({_id: new ObjectId(id)});
+        await collection.deleteOne({_id: new ObjectId(String(id))});
     } catch(err){
         throw new Error(err.message);
     }
