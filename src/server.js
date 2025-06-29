@@ -30,13 +30,21 @@ const startServer = async () => {
                 });
 
                 request.on('end', async () => {
-                    const bodyData = JSON.parse(body);
-                    const persistedData = await createNews(articlesCollection, bodyData);
-                    const news = await findNewsById(articlesCollection, persistedData.insertedId);
-                    response.writeHead(201, { 'content-type': 'application/json' });
-                    response.end(JSON.stringify(news));
-                });
-                return;
+                    try {
+                        const bodyData = JSON.parse(body);
+                        const persistedData = await createNews(articlesCollection, bodyData);
+                        const news = await findNewsById(articlesCollection, persistedData.insertedId);
+                        response.writeHead(201, { 'content-type': 'application/json' });
+                        response.end(JSON.stringify(news));
+                        return;
+                }
+                catch(error){
+                    response.writeHead(500, { 'content-type': 'application/json' });
+                    response.end(JSON.stringify({status: 500, message: error.message}));
+                    return;
+                }
+            });
+                    
             }
 
             if(request.url === "/" && request.method === 'GET'){
@@ -47,8 +55,28 @@ const startServer = async () => {
                 return;
             }
 
-            if(request.url.length === 25 && request.method === 'PUT'){
-                
+            if(request.method === 'GET' && request.url.length === 25){
+                try {
+                    const articlesCollection = await db.collection('articles');
+                    const parsedUrl = new URL(request.url, `http://${request.headers.host}`);
+                    const path = parsedUrl.pathname;
+                    const match = path.match(/^\/([a-f\d]{24})$/i);
+                    const id = match[1];
+                    const article = await findNewsById(articlesCollection, id);
+
+                    if(article){
+                        response.writeHead(200, { 'content-type': 'application/json'});
+                        response.end(JSON.stringify(article));
+                        return;
+                    }
+                } catch (error) {
+                    response.writeHead(500, {'content-type': 'application/json'});
+                    response.end(JSON.stringify({status: 500, message: 'Internal Server Error'}));
+                    return;
+                }
+            }
+
+            if(request.method === 'PUT'){
                 const parsedUrl = new URL(request.url, `http://${request.headers.host}`);
                 const path = parsedUrl.pathname;
                 const match = path.match(/^\/([a-f\d]{24})$/i);
@@ -70,18 +98,16 @@ const startServer = async () => {
                     const articlesCollection = await db.collection('articles');
                     const updatedNews = await updateNewsById(articlesCollection, id, bodyJson);
                     
-                    if(updatedNews === null) {
-                        response.writeHead(404);
-                        response.end('News not found');
+                    if(updatedNews) {
+                        response.writeHead(200, {"content-type": 'application/json'});
+                        response.end(JSON.stringify(updatedNews));
                         return;
                     }
-                    response.writeHead(200, {"content-type": 'application/json'});
-                    response.end(JSON.stringify(updatedNews));
-                }); 
-                return;
+                });
             }
             response.writeHead(404, {"content-type": "application/json"});
             response.end(JSON.stringify({"error": "Not Found"}));
+            return;
         }
     ).listen(8080, () => {
         console.log('🚀 Server run on http://localhost:8080')
