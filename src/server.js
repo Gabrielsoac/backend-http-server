@@ -1,6 +1,6 @@
 import http from 'http';
 import { dbConnection } from './database/dbConnection.js';
-import { createNews, findAllNews, findNewsById, updateNewsById } from './services/newsService.js';
+import { createNews, deleteNewsById, findAllNews, findNewsById, updateNewsById } from './services/newsService.js';
 
 let db = null;
 
@@ -104,6 +104,30 @@ const startServer = async () => {
                         return;
                     }
                 });
+            }
+
+            if (request.method === 'DELETE' && request.url.length === 25){
+                
+                try {
+                    const articlesCollection = await db.collection('articles');
+                    
+                    const parsedUrl = new URL(request.url, `http://${request.headers.host}`);
+                    const path = parsedUrl.pathname;
+                    const match = path.match(/^\/([a-f\d]{24})$/i);
+                    const id = match[1];
+
+                    const news = await findNewsById(articlesCollection, id);
+                    if(news) {
+                        await deleteNewsById(articlesCollection, id);
+                        response.writeHead(200, 'content-type', 'application/json');
+                        response.end(JSON.stringify({status: 200, message: 'Deleted Sucessfully'}));
+                        return;
+                    }
+                } catch (err){
+                    response.writeHead(500, { 'content-type': 'application/json' });
+                    response.end(JSON.stringify({ status: 500, error: err.message }));
+                    return;
+                }
             }
             response.writeHead(404, {"content-type": "application/json"});
             response.end(JSON.stringify({"error": "Not Found"}));
